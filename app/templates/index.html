@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TaskFlow</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>TaskFlow</h1>
+
+        <p class="subtitle">
+            Simple task management application
+        </p>
+
+        <form action="/add" method="POST" class="task-form">
+
+            <input
+                type="text"
+                name="title"
+                placeholder="Enter a new task..."
+                required
+            >
+
+            <button type="submit">
+                Add Task
+            </button>
+
+        </form>
+
+        <div class="tasks">
+
+            {% if tasks %}
+
+                {% for task in tasks %}
+
+                    <div class="task {% if task['completed'] %}completed{% endif %}">
+
+                        <span>
+                            {{ task['title'] }}
+                        </span>
+
+                        <div class="actions">
+
+                            <form
+                                action="/complete/{{ task['id'] }}"
+                                method="POST"
+                            >
+                                <button type="submit">
+                                    {% if task['completed'] %}
+                                        Undo
+                                    {% else %}
+                                        Complete
+                                    {% endif %}
+                                </button>
+                            </form>
+
+                            <form
+                                action="/delete/{{ task['id'] }}"
+                                method="POST"
+                            >
+                                <button type="submit" class="delete">
+                                    Delete
+                                </button>
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <p class="empty">
+                    No tasks yet. Add your first task!
+                </p>
+
+            {% endif %}
+
+        </div>
+
+        <div class="api-info">
+
+            <p>
+                API:
+                <a href="/api/tasks">
+                    /api/tasks
+                </a>
+            </p>
+
+            <p>
+                Health:
+                <a href="/health">
+                    /health
+                </a>
+            </p>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
