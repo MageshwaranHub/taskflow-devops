@@ -135,21 +135,23 @@ PY
                 }
             }
         }
+stage('Deploy to Kubernetes') {
+    steps {
+        sshagent(credentials: ['taskflow-ec2-ssh']) {
+            sh '''
+                scp -o StrictHostKeyChecking=no k8s/deployment.yaml ubuntu@65.1.41.93:/home/ubuntu/deployment.yaml
 
-        stage('Deploy to Kubernetes') {
-            steps {
-                sshagent(credentials: ['taskflow-ec2-ssh']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ubuntu@65.1.41.93 "
-                            sudo k3s kubectl set image deployment/taskflow \
-                            taskflow=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} &&
-                            sudo k3s kubectl rollout status deployment/taskflow
-                        "
-                    '''
-                }
-            }
+                ssh -o StrictHostKeyChecking=no ubuntu@65.1.41.93 "
+                    sudo k3s kubectl apply -f /home/ubuntu/deployment.yaml &&
+                    sudo k3s kubectl set image deployment/taskflow \
+                    taskflow=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} &&
+                    sudo k3s kubectl rollout status deployment/taskflow
+                "
+            '''
         }
-
+    }
+}
+        
         stage('Verify Deployment') {
             steps {
                 sshagent(credentials: ['taskflow-ec2-ssh']) {
