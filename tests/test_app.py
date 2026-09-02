@@ -1,10 +1,12 @@
 import pytest
-from app.app import app
+from app.app import app, init_db
 
 
 @pytest.fixture
 def client():
     app.config["TESTING"] = True
+
+    init_db()
 
     with app.test_client() as client:
         yield client
