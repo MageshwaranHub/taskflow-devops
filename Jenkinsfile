@@ -10,13 +10,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git branch: 'main',
-                    url: 'https://github.com/MageshwaranHub/taskflow-devops.git'
-            }
-        }
-
         stage('Run Tests') {
             steps {
                 sh '''
@@ -112,7 +105,10 @@ docker_config = {
     }
 }
 
-docker_config_json = json.dumps(docker_config, separators=(",", ":"))
+docker_config_json = json.dumps(
+    docker_config,
+    separators=(",", ":")
+)
 
 docker_config_b64 = base64.b64encode(
     docker_config_json.encode()
@@ -135,23 +131,26 @@ PY
                 }
             }
         }
-stage('Deploy to Kubernetes') {
-    steps {
-        sshagent(credentials: ['taskflow-ec2-ssh']) {
-            sh '''
-                scp -o StrictHostKeyChecking=no k8s/deployment.yaml ubuntu@65.1.41.93:/home/ubuntu/deployment.yaml
 
-                ssh -o StrictHostKeyChecking=no ubuntu@65.1.41.93 "
-                    sudo k3s kubectl apply -f /home/ubuntu/deployment.yaml &&
-                    sudo k3s kubectl set image deployment/taskflow \
-                    taskflow=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} &&
-                    sudo k3s kubectl rollout status deployment/taskflow
-                "
-            '''
+        stage('Deploy to Kubernetes') {
+            steps {
+                sshagent(credentials: ['taskflow-ec2-ssh']) {
+                    sh '''
+                        scp -o StrictHostKeyChecking=no \
+                            k8s/deployment.yaml \
+                            ubuntu@65.1.41.93:/home/ubuntu/deployment.yaml
+
+                        ssh -o StrictHostKeyChecking=no ubuntu@65.1.41.93 "
+                            sudo k3s kubectl apply -f /home/ubuntu/deployment.yaml &&
+                            sudo k3s kubectl set image deployment/taskflow \
+                            taskflow=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} &&
+                            sudo k3s kubectl rollout status deployment/taskflow
+                        "
+                    '''
+                }
+            }
         }
-    }
-}
-        
+
         stage('Verify Deployment') {
             steps {
                 sshagent(credentials: ['taskflow-ec2-ssh']) {
