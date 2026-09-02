@@ -28,8 +28,7 @@ spec:
 
       containers:
         - name: taskflow
-          image: 884686184497.dkr.ecr.ap
-south-1.amazonaws.com/taskflow:PLACEHOLDER
+          image: 884686184497.dkr.ecr.ap-south-1.amazonaws.com/taskflow:PLACEHOLDER
 
           ports:
             - containerPort: 5000
