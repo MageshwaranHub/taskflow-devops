@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskflow
+  labels:
+    app: taskflow
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: taskflow
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+
+  template:
+    metadata:
+      labels:
+        app: taskflow
+
+    spec:
+      imagePullSecrets:
+        - name: ecr-registry-secret
+
+      containers:
+        - name: taskflow
+          image: 884686184497.dkr.ecr.ap-south-1.amazonaws.com/taskflow:latest
+
+          ports:
+            - containerPort: 5000
+
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
