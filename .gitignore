@@ -1,14 +1,23 @@
-venv/
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+.terraform.lock.hcl
+
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+.pytest_cache/
 
-app/tasks.db
+# Flask
+instance/
+*.db
 
+# Environment / secrets
 .env
+.env.*
 
-.vscode/
-.idea/
-
+# Docker
 *.log
