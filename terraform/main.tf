@@ -87,16 +87,16 @@ resource "aws_security_group" "taskflow_sg" {
   description = "Security group for TaskFlow Kubernetes server"
   vpc_id      = aws_vpc.taskflow_vpc.id
 
-  # SSH
+  # SSH - restricted to current public IP
   ingress {
-    description = "SSH"
+    description = "SSH from admin IP"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["157.51.124.7/32"]
   }
 
-  # HTTP
+  # HTTP - public TaskFlow application
   ingress {
     description = "HTTP"
     from_port   = 80
@@ -105,33 +105,7 @@ resource "aws_security_group" "taskflow_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # HTTPS
-  ingress {
-    description = "HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # TaskFlow
-  ingress {
-    description = "TaskFlow application"
-    from_port   = 5000
-    to_port     = 5000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Kubernetes API
-  ingress {
-    description = "Kubernetes API"
-    from_port   = 6443
-    to_port     = 6443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
+  # Outbound internet access
   egress {
     from_port   = 0
     to_port     = 0
@@ -144,6 +118,7 @@ resource "aws_security_group" "taskflow_sg" {
     Project = "TaskFlow"
   }
 }
+
 # -------------------------
 # Latest Ubuntu AMI
 # -------------------------
@@ -189,8 +164,8 @@ resource "aws_key_pair" "taskflow_key" {
 
 resource "aws_instance" "taskflow_server" {
   ami                         = data.aws_ami.ubuntu.id
-  instance_type               = "t3.micro"
-  iam_instance_profile = aws_iam_instance_profile.taskflow_ec2_profile.name
+  instance_type               = "t3.small"
+  iam_instance_profile        = aws_iam_instance_profile.taskflow_ec2_profile.name
   user_data_replace_on_change = true
 
   subnet_id                   = aws_subnet.taskflow_public_subnet.id
@@ -239,6 +214,7 @@ resource "aws_instance" "taskflow_server" {
               # Record successful bootstrap
               echo "TaskFlow EC2 bootstrap completed successfully" > /home/ubuntu/bootstrap-complete.txt
               EOF
+
   root_block_device {
     volume_size = 20
     volume_type = "gp3"
@@ -249,6 +225,11 @@ resource "aws_instance" "taskflow_server" {
     Project = "TaskFlow"
   }
 }
+
+# -------------------------
+# Elastic IP
+# -------------------------
+
 resource "aws_eip" "taskflow_eip" {
   domain = "vpc"
 
@@ -262,6 +243,10 @@ resource "aws_eip_association" "taskflow_eip_association" {
   allocation_id = aws_eip.taskflow_eip.id
 }
 
+# -------------------------
+# Outputs
+# -------------------------
+
 output "taskflow_elastic_ip" {
   description = "Elastic IP address of the TaskFlow server"
   value       = aws_eip.taskflow_eip.public_ip
@@ -271,6 +256,11 @@ output "taskflow_instance_id" {
   description = "EC2 instance ID"
   value       = aws_instance.taskflow_server.id
 }
+
+# -------------------------
+# IAM Role for EC2
+# -------------------------
+
 resource "aws_iam_role" "taskflow_ec2_role" {
   name = "taskflow-ec2-ecr-role"
 
