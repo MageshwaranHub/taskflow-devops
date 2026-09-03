@@ -93,7 +93,7 @@ resource "aws_security_group" "taskflow_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["157.51.124.7/32"]
+    cidr_blocks = ["157.51.126.33/32"]
   }
 
   # HTTP - public TaskFlow application
